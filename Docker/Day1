@@ -1,0 +1,111 @@
+Objective
+Understand why Docker was introduced, what an Image and Container are, and learn the basic Docker commands.
+________________________________________
+1. Why was Docker introduced?
+Before Docker
+Developers often faced this problem:
+"It works on my machine."
+But when the same application was deployed to another server, it failed because:
+•	Different operating system
+•	Different Java/Python/Node.js version
+•	Missing libraries
+•	Different environment configuration
+This created deployment issues.
+________________________________________
+Docker Solution
+Docker packages:
+•	Application
+•	Runtime
+•	Libraries
+•	Dependencies
+•	Configuration
+into one package called an Image.
+That same image can run consistently on different machines.
+________________________________________
+2. Image
+Definition
+An Image is a blueprint/template used to create containers.
+It contains everything required to run an application.
+Think of it as:
+•	Cake recipe
+•	House blueprint
+•	Mobile phone design
+One image can create many containers.
+Example:
+Ubuntu Image
+        │
+        ├── Container 1
+        ├── Container 2
+        └── Container 3
+________________________________________
+3. Container
+Definition
+A Container is a running instance of an image.
+Containers are isolated from each other.
+Each container has:
+•	Its own filesystem
+•	Its own processes
+•	Its own environment
+Containers are temporary (ephemeral) by design.
+Deleting a container deletes everything inside it unless data is stored outside the container (for example, in a Docker volume).
+________________________________________
+4. Image vs Container
+Image	Container
+Blueprint	Running instance
+Read-only template	Running environment
+Can create many containers	Created from one image
+Stays on disk	Can be started, stopped, or removed
+________________________________________
+5. Docker Lifecycle
+Image
+   │
+docker run
+   ▼
+Running Container
+   │
+docker stop
+   ▼
+Stopped Container
+   │
+docker start
+   ▼
+Running Again
+   │
+docker rm
+   ▼
+Container Deleted
+________________________________________
+6. Commands Learned
+docker run
+Creates and starts a new container.
+Example:
+docker run hello-world
+Example:
+docker run -it ubuntu bash
+Meaning:
+•	docker → Docker CLI
+•	run → Create and start a container
+•	-i → Interactive mode
+•	-t → Allocate a terminal
+•	ubuntu → Image name
+•	bash → Start Bash shell
+________________________________________
+docker images
+Shows all images stored locally.
+Example:
+docker images
+________________________________________
+docker ps
+Shows only running containers.
+Example:
+docker ps
+________________________________________
+docker ps -a
+Shows all containers.
+Includes:
+•	Running containers
+•	Stopped containers
+Example:
+docker ps -a
+
+
