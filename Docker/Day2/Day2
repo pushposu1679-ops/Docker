@@ -1,0 +1,308 @@
+Docker Day 2 Notes – Dockerfile, FROM, RUN, CMD
+1. What is a Dockerfile?
+
+A Dockerfile is a plain text file that contains instructions for building a Docker image.
+
+Instead of manually installing software every time a container is created, we write the instructions once in a Dockerfile. Docker automatically builds an image with all the required software already installed.
+
+2. Why do we need a Dockerfile?
+
+Without a Dockerfile:
+
+Create Ubuntu container
+Install Git
+Install Curl
+Install Python
+Repeat these steps every time
+
+With a Dockerfile:
+
+Write instructions once
+Build an image
+Every new container already contains the required software
+
+This saves time, ensures consistency, and avoids manual configuration.
+
+3. Docker Build Workflow
+Dockerfile
+      │
+docker build
+      │
+      ▼
+Docker Image
+      │
+docker run
+      │
+      ▼
+Docker Container
+4. Dockerfile Instructions
+FROM
+
+Syntax:
+
+FROM ubuntu
+
+Purpose:
+
+Specifies the base image.
+It is usually the first instruction in every Dockerfile.
+Docker builds a new image starting from this base image.
+
+Example:
+
+FROM ubuntu
+RUN
+
+Syntax:
+
+RUN apt update
+RUN apt install -y git
+
+Purpose:
+
+Executes commands while building the image.
+Commonly used for:
+Installing software
+Updating packages
+Configuring the image
+
+Important:
+
+Each RUN instruction creates a temporary container.
+Docker executes the command.
+Docker saves the changes as a new image layer.
+Docker removes the temporary container.
+
+Example:
+
+RUN apt update
+RUN apt install -y git
+CMD
+
+Syntax:
+
+CMD ["bash"]
+
+Purpose:
+
+Specifies the default command that runs when a container starts.
+Executed only when the container is launched using docker run.
+
+Example:
+
+CMD ["bash"]
+5. Difference Between RUN and CMD
+RUN	CMD
+Executes during image build	Executes when the container starts
+Used to install software	Used to specify the default startup command
+Can have multiple RUN instructions	Normally only one effective CMD (last one wins)
+6. First Dockerfile
+FROM ubuntu
+
+RUN apt update
+
+RUN apt install -y git
+
+CMD ["bash"]
+7. Build an Image
+
+Command:
+
+docker build -t pushpa-ubuntu:v1 .
+
+Explanation:
+
+docker → Docker CLI
+build → Build an image
+-t → Tag (assign image name)
+pushpa-ubuntu → Image name
+v1 → Version tag
+. → Current directory (build context)
+8. What does "." mean?
+
+The dot (.) represents the current directory.
+
+Docker uses it as the build context.
+
+By default, Docker looks for a file named exactly:
+
+Dockerfile
+
+inside the current directory.
+
+If the Dockerfile has a different name, use:
+
+docker build -f MyDockerfile -t myimage .
+9. Build Context
+
+Example:
+
+Day2/
+├── Dockerfile
+├── app.py
+└── requirements.txt
+
+When running:
+
+docker build -t myimage .
+
+Docker can access all files in the current directory because they are part of the build context.
+
+10. Build Process
+
+Docker reads the Dockerfile step by step.
+
+Example:
+
+FROM ubuntu
+
+RUN apt update
+
+RUN apt install -y git
+
+CMD ["bash"]
+
+Build process:
+
+Read Dockerfile
+Use Ubuntu image
+Execute apt update
+Execute apt install -y git
+Save image
+Store CMD ["bash"] as the default startup command
+11. Temporary Containers
+
+For every RUN instruction:
+
+Docker creates a temporary container.
+Executes the command.
+Saves the changes as a new image layer.
+Removes the temporary container.
+
+Example:
+
+RUN apt update
+RUN apt install -y git
+RUN apt install -y curl
+
+Temporary containers created:
+
+RUN apt update → Temporary Container #1
+RUN apt install git → Temporary Container #2
+RUN apt install curl → Temporary Container #3
+12. Verify Images
+
+List images:
+
+docker images
+13. Run a Container
+docker run -it pushpa-ubuntu:v1
+
+Explanation:
+
+docker → Docker CLI
+run → Create and start a container
+-i → Interactive mode
+-t → Allocate a terminal
+pushpa-ubuntu → Image name
+
+Because the Dockerfile contains:
+
+CMD ["bash"]
+
+the Bash shell starts automatically.
+
+14. Verify Git Installation
+
+Inside the container:
+
+git --version
+
+If Git is installed, it confirms that the RUN instruction executed successfully during image creation.
+
+15. Delete Containers and Images
+
+List containers:
+
+docker ps -a
+
+Delete a container:
+
+docker rm <container-id>
+
+Delete an image:
+
+docker rmi <image-name>
+
+If Docker reports that an image is in use, first remove all containers created from that image, then remove the image.
+
+16. Linux Case Sensitivity
+
+Linux is case-sensitive.
+
+Examples:
+
+Docker
+docker
+DOCKER
+
+These are different names.
+
+Examples:
+
+file.txt
+File.txt
+
+These are different files.
+
+Commands:
+
+ls
+
+Works.
+
+LS
+
+Fails because Linux treats uppercase and lowercase as different.
+
+Interview Questions
+Q1. What is a Dockerfile?
+
+A Dockerfile is a text file containing instructions used to build a Docker image.
+
+Q2. Why do we use FROM?
+
+FROM specifies the base image used to build a new Docker image.
+
+Q3. What is RUN?
+
+RUN executes commands while building the Docker image.
+
+Q4. What is CMD?
+
+CMD specifies the default command that runs when a container starts.
+
+Q5. Difference between RUN and CMD?
+
+RUN executes during image build.
+
+CMD executes when the container starts.
+
+Q6. What does the "." in docker build -t myimage . mean?
+
+The dot represents the current directory, which Docker uses as the build context. By default, Docker looks for a file named Dockerfile inside that directory.
+
+Commands Learned Today
+docker build -t pushpa-ubuntu:v1 .
+
+docker images
+
+docker run -it pushpa-ubuntu:v1
+
+git --version
+
+docker ps -a
+
+docker rm <container-id>
+
+docker rmi <image-name>
