@@ -1,0 +1,504 @@
+# Docker Day 3 Notes – Advanced Dockerfile Instructions
+
+# Day 3 Topics
+
+* COPY
+* WORKDIR
+* ENV
+* EXPOSE
+
+---
+
+# 1. COPY
+
+## What is COPY?
+
+COPY is used to copy files and directories from the **host machine (build context)** into the Docker image while building the image.
+
+Syntax:
+
+```dockerfile
+COPY <source> <destination>
+```
+
+Example:
+
+```dockerfile
+COPY app.py /app/
+```
+
+Meaning:
+
+* Source = app.py (present on host machine)
+* Destination = /app/ inside Docker image
+
+Example:
+
+Project Structure:
+
+```
+Day3/
+│
+├── Dockerfile
+└── app.py
+```
+
+Dockerfile:
+
+```dockerfile
+FROM ubuntu
+
+COPY app.py /app/
+```
+
+After building the image:
+
+```
+Docker Image
+│
+└── app
+      │
+      └── app.py
+```
+
+Important:
+
+COPY copies files into the **Docker Image**, not directly into a running container.
+
+When a container is created from the image, those files are already available.
+
+---
+
+# 2. WORKDIR
+
+## What is WORKDIR?
+
+WORKDIR sets the current working directory inside the Docker image.
+
+If the directory does not exist, Docker automatically creates it.
+
+Syntax:
+
+```dockerfile
+WORKDIR /app
+```
+
+Example:
+
+```dockerfile
+FROM ubuntu
+
+WORKDIR /app
+
+COPY notes.txt .
+```
+
+Here,
+
+```
+.
+```
+
+means the current working directory.
+
+Since the current working directory is `/app`, Docker interprets it as:
+
+```dockerfile
+COPY notes.txt /app/
+```
+
+Verification:
+
+Inside container:
+
+```bash
+pwd
+```
+
+Output:
+
+```
+/app
+```
+
+Important:
+
+Multiple WORKDIR instructions:
+
+```dockerfile
+WORKDIR /project
+
+WORKDIR backend
+```
+
+Final directory:
+
+```
+/project/backend
+```
+
+If absolute path is used:
+
+```dockerfile
+WORKDIR /backend
+```
+
+Final directory becomes:
+
+```
+/backend
+```
+
+---
+
+# Difference between "." in different places
+
+### docker build
+
+```bash
+docker build .
+```
+
+`.` means:
+
+Current directory on the host machine (build context).
+
+### COPY
+
+```dockerfile
+COPY app.py .
+```
+
+`.` means:
+
+Current WORKDIR inside Docker image.
+
+---
+
+# 3. ENV
+
+## What is ENV?
+
+ENV is used to define environment variables inside a Docker image.
+
+These variables are available to containers created from that image.
+
+Syntax:
+
+```dockerfile
+ENV VARIABLE_NAME=value
+```
+
+Example:
+
+```dockerfile
+ENV COURSE=Docker
+```
+
+Verification:
+
+Inside container:
+
+```bash
+echo $COURSE
+```
+
+Output:
+
+```
+Docker
+```
+
+---
+
+# What is an Environment Variable?
+
+An environment variable is simply a **configuration setting** used by an application or operating system.
+
+Think of it like TV settings:
+
+```
+Brightness = 70
+Language = English
+Volume = 20
+```
+
+Similarly, an application may have settings like:
+
+```
+PORT = 8080
+APP_ENV = production
+LOG_LEVEL = INFO
+```
+
+Instead of hardcoding these values inside the application, they are stored as environment variables.
+
+---
+
+# Why use ENV?
+
+Suppose an application runs in Development today:
+
+```
+APP_ENV = development
+```
+
+Tomorrow it runs in Production:
+
+```
+APP_ENV = production
+```
+
+The application code remains exactly the same.
+
+Only the configuration changes.
+
+Common examples:
+
+```dockerfile
+ENV APP_ENV=production
+
+ENV PORT=8080
+
+ENV JAVA_HOME=/usr/lib/jvm/java-17
+
+ENV LOG_LEVEL=INFO
+```
+
+---
+
+# Important Concept
+
+Changing Dockerfile does NOT change an existing image.
+
+Example:
+
+Dockerfile:
+
+```dockerfile
+ENV COURSE=Docker
+```
+
+Build image:
+
+```bash
+docker build -t day3:v1 .
+```
+
+Later Dockerfile is changed:
+
+```dockerfile
+ENV COURSE=AWS
+```
+
+If image is NOT rebuilt:
+
+```bash
+docker run day3:v1
+```
+
+Output:
+
+```
+Docker
+```
+
+NOT
+
+```
+AWS
+```
+
+Reason:
+
+Docker Image is an immutable snapshot created during docker build.
+
+To apply Dockerfile changes:
+
+```bash
+docker build -t day3:v2 .
+```
+
+---
+
+# 4. EXPOSE
+
+## What is EXPOSE?
+
+EXPOSE informs Docker and other developers which port the application inside the container is expected to listen on.
+
+Syntax:
+
+```dockerfile
+EXPOSE 8080
+```
+
+Example:
+
+```dockerfile
+EXPOSE 5000
+```
+
+Important:
+
+EXPOSE does NOT publish or open the port.
+
+It only documents the intended port.
+
+Actual port publishing is done using:
+
+```bash
+docker run -p 8080:8080 image_name
+```
+
+(Will be learned later.)
+
+---
+
+# Complete Dockerfile
+
+```dockerfile
+FROM ubuntu
+
+WORKDIR /app
+
+COPY notes.txt .
+
+RUN apt update
+
+RUN apt install -y git
+
+ENV COURSE=Docker
+
+EXPOSE 8080
+
+CMD ["bash"]
+```
+
+Execution Flow:
+
+1. Start from Ubuntu base image.
+2. Create/use `/app` as working directory.
+3. Copy `notes.txt` into `/app`.
+4. Update Ubuntu packages.
+5. Install Git.
+6. Create environment variable `COURSE=Docker`.
+7. Inform that application listens on port 8080.
+8. Start Bash when container launches.
+
+---
+
+# Hands-on Commands
+
+Build image:
+
+```bash
+docker build -t pushpa-day3:v1 .
+```
+
+Run container:
+
+```bash
+docker run -it --name day3-container pushpa-day3:v1
+```
+
+Verify working directory:
+
+```bash
+pwd
+```
+
+Verify copied file:
+
+```bash
+ls
+
+cat notes.txt
+```
+
+Verify Git installation:
+
+```bash
+git --version
+```
+
+Verify environment variable:
+
+```bash
+echo $COURSE
+```
+
+Exit container:
+
+```bash
+exit
+```
+
+---
+
+# Interview Questions
+
+## What is COPY?
+
+COPY copies files and directories from the host machine (build context) into the Docker image during image build.
+
+---
+
+## What is WORKDIR?
+
+WORKDIR sets the current working directory inside the Docker image. If the directory does not exist, Docker creates it automatically.
+
+---
+
+## What is ENV?
+
+ENV creates environment variables that store configuration values for applications.
+
+---
+
+## What is EXPOSE?
+
+EXPOSE informs Docker which port the application inside the container is expected to listen on. It does not publish the port.
+
+---
+
+## Does changing the Dockerfile change an existing image?
+
+No.
+
+A Docker image is an immutable snapshot. After changing the Dockerfile, you must rebuild the image using `docker build`.
+
+---
+
+# Commands Learned So Far
+
+```bash
+docker run
+
+docker ps
+
+docker ps -a
+
+docker build
+
+docker images
+
+docker rm
+
+docker rmi
+
+docker run -it
+
+docker build -t image_name .
+
+docker run --name container_name
+
+pwd
+
+ls
+
+cat
+
+echo $VARIABLE
+```
+
