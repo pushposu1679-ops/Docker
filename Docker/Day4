@@ -1,0 +1,508 @@
+# Docker Day 4 Notes – Docker Images Management
+
+# Topics Covered
+
+* Docker Image Layers
+* Layer Caching
+* docker history
+* docker images
+* docker rmi
+* docker tag
+
+---
+
+# 1. Docker Image Layers
+
+## What are Docker Layers?
+
+A Docker image is **not a single file**.
+
+It is made up of multiple **read-only layers**.
+
+Each instruction in a Dockerfile creates a new layer.
+
+Example:
+
+```dockerfile
+FROM ubuntu
+
+RUN apt update
+
+RUN apt install -y git
+
+COPY notes.txt .
+
+CMD ["bash"]
+```
+
+Layers created:
+
+```text
+Layer 5 → CMD ["bash"]
+
+Layer 4 → COPY notes.txt .
+
+Layer 3 → RUN apt install -y git
+
+Layer 2 → RUN apt update
+
+Layer 1 → FROM ubuntu
+```
+
+Every instruction creates a separate layer.
+
+---
+
+# 2. Why does Docker create layers?
+
+Docker creates layers mainly because of **Layer Caching**.
+
+Instead of rebuilding the complete image every time, Docker reuses the layers that have not changed.
+
+This makes image building:
+
+* Faster
+* More storage efficient
+* Reusable
+
+---
+
+# Example
+
+Dockerfile:
+
+```dockerfile
+FROM ubuntu
+
+RUN apt update
+
+RUN apt install -y git
+
+COPY notes.txt .
+
+CMD ["bash"]
+```
+
+Suppose only **notes.txt** changes.
+
+Docker will reuse:
+
+```text
+FROM ubuntu
+
+RUN apt update
+
+RUN apt install -y git
+```
+
+Docker will rebuild:
+
+```text
+COPY notes.txt .
+
+CMD ["bash"]
+```
+
+Docker starts rebuilding from the **first changed layer onward**.
+
+---
+
+# Docker Layer Cache
+
+Think of building a house.
+
+House:
+
+```text
+Foundation
+
+Walls
+
+Roof
+
+Paint
+```
+
+Tomorrow only paint changes.
+
+Do we rebuild the entire house?
+
+No.
+
+Only paint changes.
+
+Docker works in exactly the same way.
+
+---
+
+# Best Practice
+
+Expensive operations should be placed before frequently changing files.
+
+Good Dockerfile:
+
+```dockerfile
+FROM ubuntu
+
+RUN apt update
+
+RUN apt install -y python3
+
+RUN apt install -y git
+
+COPY app.py .
+
+CMD ["python3","app.py"]
+```
+
+Reason:
+
+Developers change app.py frequently.
+
+Docker can reuse the installation layers.
+
+---
+
+# 3. docker history
+
+## Purpose
+
+Displays the history of a Docker image.
+
+Shows:
+
+* Layers
+* Commands used
+* Layer size
+* Creation time
+
+Command:
+
+```bash
+docker history image_name
+```
+
+Example:
+
+```bash
+docker history ubuntu:latest
+```
+
+Output:
+
+```text
+IMAGE
+
+CREATED
+
+CREATED BY
+
+SIZE
+
+COMMENT
+```
+
+---
+
+## Meaning of each column
+
+IMAGE
+
+Layer ID
+
+CREATED
+
+When that layer was created
+
+CREATED BY
+
+Command that created that layer
+
+SIZE
+
+Size occupied by that layer
+
+COMMENT
+
+Additional information
+
+---
+
+## Why do we see <missing> ?
+
+Example:
+
+```text
+<missing>
+```
+
+It does NOT mean an error.
+
+It simply means Docker does not display the image ID of intermediate layers.
+
+The layers still exist.
+
+---
+
+## Important
+
+docker history displays layers from
+
+Newest
+
+↓
+
+Oldest
+
+The last Dockerfile instruction appears at the top.
+
+The first Dockerfile instruction appears at the bottom.
+
+---
+
+# Interview Question
+
+What is docker history?
+
+Answer:
+
+docker history displays the history of a Docker image by showing all image layers, the commands used to create them, their size and creation time.
+
+---
+
+# 4. docker images
+
+Purpose:
+
+Lists all Docker images available locally.
+
+Command:
+
+```bash
+docker images
+```
+
+Example Output:
+
+```text
+REPOSITORY
+
+TAG
+
+IMAGE ID
+
+CREATED
+
+SIZE
+```
+
+Meaning:
+
+Repository
+
+Image Name
+
+Tag
+
+Version of image
+
+Image ID
+
+Unique image identifier
+
+Created
+
+When image was built
+
+Size
+
+Image size
+
+---
+
+# 5. docker rmi
+
+Purpose:
+
+Removes a Docker image.
+
+Command:
+
+```bash
+docker rmi image_name
+```
+
+Example:
+
+```bash
+docker rmi ubuntu
+```
+
+or
+
+```bash
+docker rmi ubuntu:latest
+```
+
+If an image is currently being used by a container:
+
+Docker shows:
+
+```text
+conflict
+
+unable to delete image
+
+container is using its referenced image
+```
+
+Solution:
+
+Delete the container first.
+
+Then delete the image.
+
+---
+
+# 6. docker tag
+
+Purpose:
+
+Assign another name or version tag to an existing image.
+
+It does NOT create a new image.
+
+Syntax:
+
+```bash
+docker tag existing_image new_image
+```
+
+Example:
+
+```bash
+docker tag pushpa-ubuntu:v1 pushpa-ubuntu:latest
+```
+
+Now:
+
+```bash
+docker images
+```
+
+shows:
+
+```text
+pushpa-ubuntu   v1
+
+pushpa-ubuntu   latest
+```
+
+Both tags point to the same Image ID.
+
+---
+
+# Important
+
+docker tag does not duplicate the image.
+
+It only creates another reference to the same image.
+
+---
+
+# Commands Learned
+
+Build image
+
+```bash
+docker build -t image_name:tag .
+```
+
+List images
+
+```bash
+docker images
+```
+
+View image history
+
+```bash
+docker history image_name
+```
+
+Delete image
+
+```bash
+docker rmi image_name
+```
+
+Create another tag
+
+```bash
+docker tag old_image:newtag new_image:newtag
+```
+
+---
+
+# Interview Questions
+
+## What are Docker Layers?
+
+Docker layers are read-only layers created by each instruction in a Dockerfile. Together they form a Docker image.
+
+---
+
+## Why are Docker Layers important?
+
+Docker layers allow layer caching, making image builds faster and reducing storage usage.
+
+---
+
+## What is Layer Cache?
+
+Docker reuses unchanged layers during image build and rebuilds only from the first modified layer onwards.
+
+---
+
+## What does docker history do?
+
+It displays all layers used to build an image along with their creation commands, size and timestamps.
+
+---
+
+## What does docker images do?
+
+Lists all Docker images available on the local system.
+
+---
+
+## What does docker rmi do?
+
+Deletes a Docker image from the local system.
+
+---
+
+## What does docker tag do?
+
+Creates another name or version tag for an existing image without creating a duplicate image.
+
+---
+
+# Key Takeaways
+
+✔ A Docker image is made up of multiple layers.
+
+✔ Each Dockerfile instruction creates a new layer.
+
+✔ Docker uses layer caching to avoid rebuilding unchanged layers.
+
+✔ docker history helps us understand image layers.
+
+✔ docker images lists local images.
+
+✔ docker rmi removes images.
+
+✔ docker tag creates another reference (tag) to the same image.
+
+✔ Changing a Dockerfile does NOT modify an existing image. A new image must be built using docker build.
+
