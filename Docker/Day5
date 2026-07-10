@@ -1,0 +1,426 @@
+# Docker Day 5 Notes – Docker Container Lifecycle
+
+# Topics Covered
+
+* docker start
+* docker stop
+* docker restart
+* docker exec
+* docker logs
+* docker cp
+
+---
+
+# Docker Container Lifecycle
+
+```text
+Docker Image
+      │
+      ▼
+docker run
+      │
+      ▼
+Container Created
+      │
+      ▼
+Running
+      │
+      ├────────► docker stop
+      │               │
+      │               ▼
+      │            Exited
+      │               │
+      │               ▼
+      │          docker start
+      │               │
+      ▼               ▼
+Running ◄──── docker restart
+
+Running
+      │
+      ▼
+docker exec
+(Open Interactive Terminal)
+
+Running
+      │
+      ▼
+docker logs
+(View Application Logs)
+
+Running / Stopped
+      │
+      ▼
+docker cp
+(Copy files between Host and Container)
+```
+
+---
+
+# 1. docker start
+
+## Purpose
+
+Starts an existing stopped container.
+
+Syntax
+
+```bash
+docker start <container_name>
+```
+
+Example
+
+```bash
+docker start ubuntu1
+```
+
+Important
+
+* Starts an existing container.
+* Does NOT create a new container.
+* Does NOT open an interactive terminal.
+
+---
+
+# docker run vs docker start
+
+docker run
+
+* Creates a NEW container
+* Starts the container
+
+docker start
+
+* Starts an EXISTING stopped container
+* Does not create a new container
+
+---
+
+# 2. docker stop
+
+## Purpose
+
+Stops a running container.
+
+Syntax
+
+```bash
+docker stop <container_name>
+```
+
+Example
+
+```bash
+docker stop ubuntu1
+```
+
+Important
+
+* Stops the container.
+* Does NOT delete the container.
+* Container moves to Exited state.
+
+---
+
+# 3. docker restart
+
+## Purpose
+
+Restarts a container.
+
+Syntax
+
+```bash
+docker restart <container_name>
+```
+
+Example
+
+```bash
+docker restart ubuntu1
+```
+
+Internally Docker performs:
+
+```text
+docker stop
+
+↓
+
+docker start
+```
+
+Useful when an application becomes unresponsive.
+
+---
+
+# 4. docker exec
+
+## Purpose
+
+Opens an interactive terminal inside a RUNNING container.
+
+Syntax
+
+```bash
+docker exec -it <container_name> bash
+```
+
+Example
+
+```bash
+docker exec -it ubuntu1 bash
+```
+
+Meaning
+
+-i
+
+Interactive mode
+
+-t
+
+Allocates a terminal (TTY)
+
+bash
+
+Starts Bash shell inside the container
+
+---
+
+# Important Difference
+
+docker start
+
+Starts container only.
+
+docker exec
+
+Allows us to enter an already running container.
+
+---
+
+# docker run -it vs docker exec -it
+
+docker run -it ubuntu bash
+
+Creates a NEW container.
+
+bash becomes the Main Process.
+
+Typing exit stops the container.
+
+docker exec -it ubuntu1 bash
+
+Enters an already RUNNING container.
+
+bash is only a secondary process.
+
+Typing exit closes only the Bash session.
+
+Container continues running.
+
+---
+
+# 5. docker logs
+
+## Purpose
+
+Displays the logs printed by the application running inside the container.
+
+Syntax
+
+```bash
+docker logs <container_name>
+```
+
+Example
+
+```bash
+docker logs myapp
+```
+
+Uses
+
+* Troubleshooting
+* Debugging
+* Checking application output
+* Viewing errors
+
+Important
+
+docker logs works even if the container is in Exited state (as long as the logs are still available).
+
+---
+
+# 6. docker cp
+
+## Purpose
+
+Copies files between Host machine and Docker Container.
+
+It works in both directions.
+
+---
+
+## Host → Container
+
+Syntax
+
+```bash
+docker cp file.txt container_name:/path/
+```
+
+Example
+
+```bash
+docker cp config.txt ubuntu1:/app/
+```
+
+---
+
+## Container → Host
+
+Syntax
+
+```bash
+docker cp container_name:/path/file .
+```
+
+Example
+
+```bash
+docker cp ubuntu1:/tmp/report.txt .
+```
+
+"." means current directory on the host machine.
+
+---
+
+# Easy Trick
+
+Host → Container
+
+```bash
+docker cp file.txt container:/path/
+```
+
+Container → Host
+
+```bash
+docker cp container:/path/file .
+```
+
+---
+
+# Commands Learned
+
+Start container
+
+```bash
+docker start ubuntu1
+```
+
+Stop container
+
+```bash
+docker stop ubuntu1
+```
+
+Restart container
+
+```bash
+docker restart ubuntu1
+```
+
+Enter running container
+
+```bash
+docker exec -it ubuntu1 bash
+```
+
+View logs
+
+```bash
+docker logs ubuntu1
+```
+
+Copy Host → Container
+
+```bash
+docker cp config.txt ubuntu1:/app/
+```
+
+Copy Container → Host
+
+```bash
+docker cp ubuntu1:/tmp/report.txt .
+```
+
+---
+
+# Interview Questions
+
+## What is the difference between docker run and docker start?
+
+docker run creates a new container from an image and starts it.
+
+docker start starts an existing stopped container.
+
+---
+
+## What is the difference between docker start and docker exec?
+
+docker start only starts the container.
+
+docker exec opens an interactive terminal inside a running container.
+
+---
+
+## What happens when we type exit after docker exec?
+
+Only the Bash shell closes.
+
+The container continues running.
+
+---
+
+## What happens when we type exit after docker run -it?
+
+The main process exits.
+
+The container stops.
+
+---
+
+## What is docker logs?
+
+docker logs displays the stdout and stderr output generated by the main application running inside a container. It is mainly used for troubleshooting and debugging.
+
+---
+
+## What is docker cp?
+
+docker cp copies files and directories between the host machine and a Docker container.
+
+---
+
+# Key Takeaways
+
+✔ docker run creates a new container.
+
+✔ docker start starts an existing stopped container.
+
+✔ docker stop stops a running container.
+
+✔ docker restart = docker stop + docker start.
+
+✔ docker exec opens a shell inside a running container.
+
+✔ Exiting docker exec does NOT stop the container.
+
+✔ docker logs is the first command used to troubleshoot containerized applications.
+
+✔ docker cp copies files between host and container in both directions.
+
