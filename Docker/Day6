@@ -1,0 +1,270 @@
+📘 Docker Day 6 Notes – Docker Networking
+1. Why do we need Docker Networking?
+
+Every Docker container runs in an isolated environment.
+
+If Docker networking did not exist:
+
+Containers could not communicate with each other.
+Browser could not access applications running inside containers.
+Applications like Nginx, MySQL, Redis, etc., would not be reachable.
+
+Docker networking provides communication:
+
+Host ↔ Container
+Container ↔ Container
+Container ↔ Internet
+2. Why do we need Port Mapping?
+
+Applications inside containers listen on their own ports.
+
+Example:
+
+Nginx → Port 80
+
+This port exists inside the container only.
+
+The browser cannot directly access the container's port because the container has its own isolated network.
+
+Docker uses Port Mapping to connect the host machine with the container.
+
+3. Port Mapping
+
+Command:
+
+docker run -p HOST_PORT:CONTAINER_PORT IMAGE_NAME
+
+Example:
+
+docker run -d -p 8080:80 nginx
+
+Meaning:
+
+Host Port 8080
+        │
+        ▼
+Container Port 80
+
+Browser URL:
+
+http://localhost:8080
+4. Host Port vs Container Port
+Host Port	Container Port
+Exists on laptop	Exists inside container
+Browser connects here	Application listens here
+Must be unique	Can be same in different containers
+
+Example:
+
+docker run -p 5000:80 nginx
+
+Browser:
+
+http://localhost:5000
+5. Why can't we directly access Container Port?
+
+Container has its own private network.
+
+Example:
+
+Container
+
+Nginx
+
+Port 80
+
+The browser cannot directly enter the container network.
+
+Docker forwards requests using:
+
+Host Port → Container Port
+6. What does EXPOSE do?
+
+Example:
+
+EXPOSE 80
+
+EXPOSE only tells Docker:
+
+This application listens on Port 80.
+
+It does NOT publish the port.
+
+To access from the host, we still need:
+
+-p
+7. Docker Networks
+
+List Docker networks:
+
+docker network ls
+
+Output:
+
+bridge
+host
+none
+Bridge Network
+
+Default Docker network.
+
+Every container joins this network unless another network is specified.
+
+Host Network
+
+Container shares the host machine's network.
+
+No network isolation.
+
+None Network
+
+Container has no network.
+
+Cannot communicate with:
+
+Internet
+Other containers
+Host
+8. Inspect Docker Network
+
+Command:
+
+docker network inspect bridge
+
+Shows:
+
+Network Name
+Driver
+Subnet
+Gateway
+Connected Containers
+Container IP Address
+MAC Address
+9. Docker Bridge Network
+
+Example:
+
+Subnet
+
+172.17.0.0/16
+
+Gateway
+
+172.17.0.1
+
+Container IP
+
+172.17.0.2
+
+Docker automatically assigns the next available IP address from the subnet.
+
+10. Container IP Address
+
+Every container receives:
+
+Unique IP Address
+Unique MAC Address
+
+Example:
+
+Container 1
+
+172.17.0.2
+Container 2
+
+172.17.0.3
+
+Docker automatically allocates the next free IP.
+
+11. Why can't two containers use the same Host Port?
+
+Example:
+
+docker run -p 8080:80 nginx
+
+Another container:
+
+docker run -p 8080:80 nginx
+
+❌ Docker gives an error because Host Port 8080 is already in use.
+
+Correct:
+
+docker run -p 8080:80 nginx
+docker run -p 8081:80 nginx
+
+Both containers still use Port 80 internally.
+
+12. Dockerfile with Nginx
+
+Example:
+
+FROM ubuntu
+
+RUN apt update
+
+RUN apt install -y nginx
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+13. Why do we use daemon off;?
+
+Normally Nginx starts in the background (daemon mode).
+
+Docker containers stay alive only while the main process is running.
+
+Using:
+
+CMD ["nginx", "-g", "daemon off;"]
+
+keeps Nginx running in the foreground so the container stays alive.
+
+14. Common Commands
+
+Build Image
+
+docker build -t my-nginx:v1 .
+
+Run Container
+
+docker run -d --name my-nginx -p 8080:80 my-nginx:v1
+
+List Networks
+
+docker network ls
+
+Inspect Bridge Network
+
+docker network inspect bridge
+
+List Running Containers
+
+docker ps
+
+List All Containers
+
+docker ps -a
+
+View Logs
+
+docker logs <container-id>
+⭐ Interview Questions
+Q1. Why is Port Mapping required?
+
+Because the container has its own isolated network. Port mapping connects a host port to the container port so that applications inside the container can be accessed from outside.
+
+Q2. What is the difference between EXPOSE and -p?
+EXPOSE documents the application's listening port inside the container.
+-p publishes the container port to the host, making it accessible externally.
+Q3. What are the default Docker networks?
+Bridge
+Host
+None
+Q4. Why can't two containers use the same Host Port?
+
+Because a host port can be bound to only one application at a time. Docker will return a "port already allocated" error.
+
+Q5. Does every Docker container get its own IP Address?
+
+Yes. Docker automatically assigns each container a unique IP address from the network's subnet.
