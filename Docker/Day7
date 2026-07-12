@@ -1,0 +1,250 @@
+1. Why do we need Docker Volumes?
+
+By default, data stored inside a container is temporary (ephemeral).
+
+If the container is deleted, all the data inside it is also deleted.
+
+Docker Volumes provide persistent storage, allowing data to survive even after the container is stopped or removed.
+
+2. Container Storage vs Volume Storage
+Without Volume
+Container
+│
+├── Application
+├── Database
+└── Data
+
+Delete Container:
+
+❌ Application Deleted
+❌ Database Deleted
+❌ Data Deleted
+With Volume
+Container
+│
+├── Application
+└── Docker Volume
+        │
+        ▼
+      Data
+
+Delete Container:
+
+❌ Container Deleted
+
+✅ Docker Volume Exists
+
+✅ Data Exists
+3. What is a Docker Volume?
+
+A Docker Volume is a persistent storage location managed by Docker.
+
+It stores important data outside the container so that the data remains safe even if the container is deleted.
+
+4. Create a Docker Volume
+
+Command:
+
+docker volume create myvolume
+
+Output:
+
+myvolume
+5. List Docker Volumes
+
+Command:
+
+docker volume ls
+
+Example:
+
+DRIVER    VOLUME NAME
+local     myvolume
+6. What does "local" mean?
+Driver : local
+
+Means Docker stores the volume on the local machine (your laptop).
+
+In production environments, other storage drivers may be used (e.g., AWS EBS, EFS, NFS).
+
+7. Inspect a Volume
+
+Command:
+
+docker volume inspect myvolume
+
+Example:
+
+[
+ {
+   "Name": "myvolume",
+   "Driver": "local",
+   "Mountpoint": "/var/lib/docker/volumes/myvolume/_data"
+ }
+]
+8. Mountpoint
+
+The Mountpoint is the actual directory on the host machine where Docker stores the volume's data.
+
+Example:
+
+/var/lib/docker/volumes/myvolume/_data
+
+Applications inside the container access this data through the mounted directory.
+
+9. Mount a Volume to a Container
+
+Command:
+
+docker run -it --name volume-demo -v myvolume:/app ubuntu bash
+
+Meaning:
+
+Docker Volume
+
+myvolume
+
+      │
+      ▼
+
+Container
+
+/app
+
+Everything stored inside /app is actually stored in myvolume.
+
+10. Data Persistence
+
+Example:
+
+Create a file:
+
+cd /app
+
+echo "Hello Pushpa!" > notes.txt
+
+Delete the container:
+
+docker rm volume-demo
+
+Create another container using the same volume:
+
+docker run -it --name volume-demo2 -v myvolume:/app ubuntu bash
+
+Check:
+
+cd /app
+
+ls
+
+cat notes.txt
+
+Result:
+
+notes.txt
+
+Hello Pushpa!
+
+The data remains because it is stored in the Docker Volume, not inside the container.
+
+11. Delete a Volume
+
+Command:
+
+docker volume rm myvolume
+
+Docker will not allow deletion if the volume is currently in use by a container.
+
+12. Named Volume
+
+Example:
+
+docker run -v myvolume:/app ubuntu
+
+Characteristics:
+
+Managed by Docker
+Docker decides where to store the data
+Best for databases and persistent application data
+13. Bind Mount
+
+Example:
+
+docker run -v ~/project:/app ubuntu
+
+Characteristics:
+
+Managed by the user
+User chooses the host folder
+Best for development and source code
+14. Named Volume vs Bind Mount
+Feature	Named Volume	Bind Mount
+Managed By	Docker	User
+Storage Location	Docker chooses	User chooses
+Best Use	Databases, persistent data	Development, source code
+Portability	High	Depends on host path
+15. Real-World Use Cases
+Named Volume
+MySQL
+PostgreSQL
+MongoDB
+Redis
+
+Used when application data must survive container recreation.
+
+Bind Mount
+Python Development
+Java Development
+Node.js Development
+
+Used when source code changes frequently.
+
+16. Common Commands
+
+Create Volume
+
+docker volume create myvolume
+
+List Volumes
+
+docker volume ls
+
+Inspect Volume
+
+docker volume inspect myvolume
+
+Delete Volume
+
+docker volume rm myvolume
+
+Mount Volume
+
+docker run -v myvolume:/app ubuntu
+
+Bind Mount
+
+docker run -v ~/project:/app ubuntu
+⭐ Interview Questions
+Q1. Why do we use Docker Volumes?
+
+Docker Volumes provide persistent storage. Data stored inside a volume remains safe even if the container is stopped, deleted, or recreated.
+
+Q2. What is the difference between container storage and Docker Volume?
+
+Container storage is temporary and deleted with the container. Docker Volumes are independent of containers and preserve data.
+
+Q3. What is the Mountpoint?
+
+The Mountpoint is the actual directory on the host machine where Docker stores the volume's data.
+
+Q4. Can multiple containers use the same Docker Volume?
+
+Yes. Multiple containers can mount the same Docker Volume and access the same persistent data.
+
+Q5. What happens if a container using a Docker Volume is deleted?
+
+Only the container is deleted. The Docker Volume and its data remain intact.
+
+Q6. What is the difference between a Named Volume and a Bind Mount?
+
+A Named Volume is managed by Docker and is best for persistent application data such as databases. A Bind Mount is managed by the user and is commonly used during development to share source code between the host and the container.
