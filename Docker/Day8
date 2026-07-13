@@ -1,0 +1,134 @@
+📘 Day 8 Summary
+1. Environment Variables
+
+Used to pass configuration to a container without changing the image.
+
+Examples:
+
+Database username
+Database password
+Port number
+Application name
+2. Pass Environment Variable
+docker run -e NAME=Pushpa ubuntu env
+
+Output:
+
+NAME=Pushpa
+3. Pass Multiple Variables
+
+One line:
+
+docker run --rm -e NAME=Pushpa -e CITY=Bengaluru -e ROLE=DevOps ubuntu env
+
+Multiple lines (using Linux line continuation):
+
+docker run --rm \
+-e NAME=Pushpa \
+-e CITY=Bengaluru \
+-e ROLE=DevOps \
+ubuntu env
+4. env
+
+This is a Linux command, not a Docker command.
+
+It prints all environment variables inside the container.
+
+5. ENV vs -e
+ENV	-e
+Dockerfile instruction	docker run option
+Build time	Runtime
+Default value inside image	Value for a specific container
+Stored in image	Not stored in image
+6. Runtime Overrides Build-time
+
+Dockerfile:
+
+ENV CITY=Bangalore
+
+Run:
+
+docker run -e CITY=Delhi myimage env
+
+Output:
+
+CITY=Delhi
+
+The runtime value overrides the Dockerfile value only for that container.
+
+7. Why not store passwords in ENV?
+
+❌ Bad
+
+ENV DB_PASSWORD=Admin123
+
+Because anyone using the image can see it.
+
+✅ Better
+
+docker run -e DB_PASSWORD=Admin123 myimage
+
+Sensitive values should be passed at runtime.
+
+8. --rm
+docker run --rm ubuntu env
+
+Meaning:
+
+Create container
+Run command
+Container exits
+Docker automatically removes it
+
+Useful for temporary containers.
+
+9. sleep
+sleep 20
+
+Linux command.
+
+Waits for 20 seconds.
+
+Docker uses it to keep a container alive for a specified time.
+
+Example:
+
+docker run ubuntu sleep 20
+
+Container status:
+
+Created
+   ↓
+Running (20 seconds)
+   ↓
+Exited
+10. Golden Rule of Docker
+
+A container runs only as long as its main process is running.
+
+Examples:
+
+Command	Container
+echo Hello	Exits immediately
+env	Exits immediately
+sleep 300	Runs for 5 minutes
+nginx	Keeps running
+⭐ Interview Questions
+Q1. What is an environment variable?
+
+A configuration value passed to an application at runtime without changing the application code or image.
+
+Q2. Difference between ENV and -e?
+ENV sets a default value during image build.
+-e sets or overrides values when starting a container.
+Q3. Why use --rm?
+
+To automatically remove the container after it exits, avoiding accumulation of stopped containers.
+
+Q4. Why do Ubuntu containers stop immediately?
+
+Ubuntu has no default long-running process. Once its main process finishes, the container exits.
+
+Q5. Why do Nginx containers keep running?
+
+Nginx starts a web server process that continues running, so the container remains alive.
