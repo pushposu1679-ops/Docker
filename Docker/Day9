@@ -1,0 +1,42 @@
+📚 Day 9 Summary
+Docker Hub
+Cloud registry to store and share Docker images.
+Similar to GitHub, but for Docker images.
+Commands learned
+docker login
+
+→ Login to Docker Hub.
+
+docker tag local-image username/image:tag
+
+→ Give a local image a Docker Hub repository name.
+
+docker push username/image:tag
+
+→ Upload the image to Docker Hub.
+
+docker pull username/image:tag
+
+→ Download the image from Docker Hub.
+
+Flow
+Dockerfile
+      │
+      ▼
+docker build
+      │
+      ▼
+Local Image
+      │
+docker tag
+      │
+      ▼
+username/image:tag
+      │
+docker push
+      ▼
+Docker Hub
+      ▲
+docker pull
+      │
+Another Laptop
