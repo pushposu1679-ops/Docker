@@ -1,0 +1,320 @@
+# Day 10 – Docker Compose
+
+## Why Docker Compose?
+
+Docker Compose is used to define and run **multiple containers together** using a single YAML configuration file.
+
+Without Docker Compose, if an application requires multiple services (for example, Nginx + MySQL + Application), we would need to run multiple `docker run` commands every time.
+
+With Docker Compose, we define all the services once in a `compose.yaml` file and start them together using a single command.
+
+---
+
+# Dockerfile vs Docker Compose
+
+## Dockerfile
+
+* Used to build **one image**.
+* Contains instructions like `FROM`, `RUN`, `COPY`, `CMD`, `ENV`.
+* Used for **our own application**.
+
+Example:
+
+```
+Application Source Code
+        │
+        ▼
+    Dockerfile
+        │
+docker build
+        │
+        ▼
+      Image
+```
+
+---
+
+## Docker Compose
+
+* Used to run **multiple containers together**.
+* Does **not** build images by itself (unless configured with `build:`).
+* Automates container creation, networking, ports, environment variables, and volumes.
+
+Example:
+
+```
+docker compose up
+```
+
+starts all defined services together.
+
+---
+
+# Compose File Structure
+
+```yaml
+services:
+  nginx:
+    image: nginx
+    ports:
+      - "8080:80"
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+```
+
+---
+
+# Keywords
+
+## services
+
+Defines all the containers that should run together.
+
+Example:
+
+* nginx
+* mysql
+* application
+
+---
+
+## image
+
+Specifies which Docker image should be used to create the container.
+
+Example:
+
+```yaml
+image: nginx
+image: mysql:8.0
+```
+
+---
+
+## ports
+
+Maps host port to container port.
+
+Syntax:
+
+```yaml
+ports:
+  - "HostPort:ContainerPort"
+```
+
+Example:
+
+```yaml
+ports:
+  - "8080:80"
+```
+
+Access application using:
+
+```
+http://localhost:8080
+```
+
+---
+
+## environment
+
+Passes environment variables to the container.
+
+Example:
+
+```yaml
+environment:
+  MYSQL_ROOT_PASSWORD: root123
+```
+
+---
+
+# Important Commands
+
+Start all services:
+
+```bash
+docker compose up
+```
+
+Run in background:
+
+```bash
+docker compose up -d
+```
+
+Stop and remove containers, network, and other Compose resources:
+
+```bash
+docker compose down
+```
+
+View running containers:
+
+```bash
+docker ps
+```
+
+View networks:
+
+```bash
+docker network ls
+```
+
+Inspect a network:
+
+```bash
+docker network inspect <network_name>
+```
+
+---
+
+# Automatic Network Creation
+
+Docker Compose automatically creates a network.
+
+Example:
+
+```
+compose-demo_default
+```
+
+All containers defined in the compose file join this network automatically.
+
+No need to manually create or connect networks.
+
+---
+
+# Container Communication
+
+Containers communicate using **service names** instead of IP addresses.
+
+Example:
+
+```
+Host = mysql
+Port = 3306
+```
+
+instead of using an IP address.
+
+Docker Compose provides automatic DNS resolution between services.
+
+---
+
+# Best Practices
+
+Keep one main service per container.
+
+Examples:
+
+* Nginx → Separate container
+* MySQL → Separate container
+* Redis → Separate container
+* PostgreSQL → Separate container
+
+---
+
+# Dockerfile vs Separate Containers
+
+### Put inside Dockerfile
+
+These are required to run **your application**.
+
+* Java Runtime
+* Python
+* Node.js
+* .NET Runtime
+* Git (if needed during image build)
+
+---
+
+### Run as Separate Containers
+
+These are independent applications.
+
+* MySQL
+* PostgreSQL
+* Redis
+* Nginx
+* RabbitMQ
+
+---
+
+# Mental Rule
+
+Ask yourself:
+
+**"Is this part of my application, or is it a separate application?"**
+
+If it is part of your application's runtime → Dockerfile.
+
+If it is an independent service → Separate container managed by Docker Compose.
+
+---
+
+# Real Workflow
+
+```
+Source Code
+      │
+      ▼
+Dockerfile
+      │
+docker build
+      │
+      ▼
+Image
+      │
+      ▼
+Docker Compose
+      │
+      ▼
+Multiple Running Containers
+```
+
+---
+
+# Interview Points
+
+**What is Docker Compose?**
+
+Docker Compose is a tool used to define and manage multiple Docker containers using a single YAML file.
+
+**Difference between Dockerfile and Docker Compose**
+
+* Dockerfile builds an image for one application.
+* Docker Compose starts and manages multiple containers together.
+
+**How do containers communicate in Docker Compose?**
+
+Containers communicate using **service names** because Docker Compose automatically creates a network and provides internal DNS resolution.
+
+---
+
+# Commands Practiced
+
+```bash
+docker compose version
+
+docker compose up
+
+docker ps
+
+docker network ls
+
+docker network inspect compose-demo_default
+```
+
+---
+
+# Key Takeaway
+
+* Dockerfile = Build **one image**.
+* Docker Compose = Run **multiple containers together** with one command.
+* Docker Compose automatically creates a network and allows containers to communicate using service names.
+
