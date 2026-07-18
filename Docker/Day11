@@ -1,0 +1,588 @@
+# Docker Day 11 + Final Revision Notes
+
+# Project: Dockerized Static Website
+
+## Project Structure
+
+```text
+my-website-v2/
+│
+├── Dockerfile
+├── index.html
+├── about.html
+└── style.css
+```
+
+---
+
+# Dockerfile
+
+```dockerfile
+FROM nginx
+
+COPY index.html /usr/share/nginx/html/
+COPY about.html /usr/share/nginx/html/
+COPY style.css /usr/share/nginx/html/
+```
+
+OR
+
+```dockerfile
+FROM nginx
+
+COPY . /usr/share/nginx/html/
+```
+
+If all files are present in the same build context, one COPY instruction is enough.
+
+---
+
+# Build Image
+
+```bash
+docker build -t mywebsite:v2 .
+```
+
+* Builds a Docker image.
+* `-t` assigns a name and tag.
+* `.` represents the build context (current directory).
+
+---
+
+# Run Container
+
+```bash
+docker run -d -p 8081:80 --name website2 mywebsite:v2
+```
+
+* `-d` → Detached mode
+* `-p` → Port mapping
+* `--name` → Container name
+
+---
+
+# Build Context
+
+The build context is the directory Docker can access while building the image.
+
+```
+Dockerfile
+index.html
+about.html
+style.css
+```
+
+Docker can only COPY files available inside the build context.
+
+---
+
+# COPY Instruction
+
+Purpose:
+
+Copies files from the local machine (build context) into the Docker image.
+
+Example
+
+```dockerfile
+COPY index.html /usr/share/nginx/html/
+```
+
+If all files are inside the same folder:
+
+```dockerfile
+COPY . /usr/share/nginx/html/
+```
+
+---
+
+# Why didn't we write CMD?
+
+Official Nginx image already contains
+
+```dockerfile
+CMD ["nginx","-g","daemon off;"]
+```
+
+Therefore we only changed the webpage and reused the existing CMD.
+
+Minimal images like Ubuntu usually require us to write our own CMD.
+
+---
+
+# Ubuntu vs Nginx
+
+Ubuntu
+
+* Only operating system
+* Does not know what to execute
+* Usually needs CMD
+
+Example
+
+```dockerfile
+FROM ubuntu
+
+COPY hello.sh .
+
+CMD ["bash","hello.sh"]
+```
+
+Nginx
+
+* Already contains Nginx server
+* Already contains CMD
+* Usually no need to write CMD
+
+---
+
+# Docker Image is Immutable
+
+Docker images are read-only.
+
+Once an image is built, it cannot be modified.
+
+If application code changes:
+
+1. Build new image
+
+```bash
+docker build -t mywebsite:v2 .
+```
+
+2. Stop old container
+
+```bash
+docker stop website2
+```
+
+3. Remove old container
+
+```bash
+docker rm website2
+```
+
+4. Run new container
+
+```bash
+docker run -d -p 8081:80 website2 mywebsite:v2
+```
+
+---
+
+# Why doesn't the container update automatically?
+
+Container uses the image that existed when it was created.
+
+Changing local files does not modify the running container.
+
+Source Code
+
+↓
+
+Build Image
+
+↓
+
+Run Container
+
+---
+
+# Why Bind Mounts?
+
+Without Bind Mount
+
+Edit Code
+
+↓
+
+Build Image
+
+↓
+
+Stop Container
+
+↓
+
+Remove Container
+
+↓
+
+Run New Container
+
+With Bind Mount
+
+Edit Code
+
+↓
+
+Refresh Browser
+
+No rebuild required.
+
+---
+
+# Docker Architecture
+
+```
+Docker Client
+      │
+Docker API
+      │
+Docker Daemon (dockerd)
+      │
+Images
+Containers
+Networks
+Volumes
+```
+
+---
+
+# Docker Client
+
+Examples
+
+```bash
+docker build
+docker run
+docker images
+docker ps
+```
+
+Client only sends requests.
+
+It does not perform Docker operations.
+
+---
+
+# Docker Daemon
+
+The Docker daemon performs all Docker operations.
+
+Examples
+
+* Builds images
+* Creates containers
+* Starts containers
+* Removes containers
+* Creates networks
+* Creates volumes
+
+---
+
+# Docker Desktop
+
+Docker Desktop includes
+
+* Docker Client
+* Docker Daemon
+* Docker Compose
+* Kubernetes
+* Credential Helper
+
+---
+
+# Docker Registry
+
+A Docker Registry stores Docker images.
+
+Examples
+
+* Docker Hub
+* Private Registry
+* AWS ECR
+* Azure ACR
+
+---
+
+# Docker Hub
+
+Public Docker Registry.
+
+Commands
+
+```bash
+docker login
+
+docker push
+
+docker pull
+```
+
+---
+
+# Dockerfile
+
+A Dockerfile contains instructions to build a Docker image.
+
+Common Instructions
+
+* FROM
+* RUN
+* COPY
+* CMD
+* ENV
+
+---
+
+# Docker Images
+
+Image = Read-only template used to create containers.
+
+Images are immutable.
+
+Containers are created from images.
+
+---
+
+# Docker Image Layers
+
+Every Dockerfile instruction creates one layer.
+
+Example
+
+```dockerfile
+FROM ubuntu
+RUN apt update
+RUN apt install nginx
+COPY index.html .
+CMD ["nginx","-g","daemon off;"]
+```
+
+Layers
+
+Layer 5 → CMD
+
+Layer 4 → COPY
+
+Layer 3 → RUN apt install nginx
+
+Layer 2 → RUN apt update
+
+Layer 1 → Ubuntu
+
+---
+
+# Why Docker Builds are Fast?
+
+Docker caches layers.
+
+If only COPY changes,
+
+Docker rebuilds only COPY layer.
+
+Remaining layers are reused.
+
+---
+
+# Docker Objects
+
+Docker manages
+
+* Images
+* Containers
+* Networks
+* Volumes
+
+---
+
+# Linux Concepts Used by Docker
+
+## Bind Mount
+
+Shares host files with container.
+
+---
+
+## Networking
+
+Provides communication between containers and host.
+
+Example
+
+```
+Host Port 8080
+        │
+Container Port 80
+```
+
+---
+
+## System Calls
+
+Container accesses CPU, memory and disk through Linux kernel.
+
+Container
+
+↓
+
+System Call
+
+↓
+
+Linux Kernel
+
+↓
+
+Hardware
+
+---
+
+## Namespaces
+
+Provide isolation.
+
+Each container has its own
+
+* Processes
+* Network
+* File system
+* Hostname
+
+---
+
+## Control Groups (cgroups)
+
+Limit resources.
+
+Can limit
+
+* CPU
+* Memory
+* Disk I/O
+
+Example
+
+```bash
+docker run --memory=1g ubuntu
+```
+
+Container cannot use more than 1 GB RAM.
+
+---
+
+# Difference Between Dockerfile and Docker Compose
+
+Dockerfile
+
+* Builds one image.
+* Describes how to create an image.
+
+Docker Compose
+
+* Runs multiple containers together.
+* Defines services.
+* Creates network automatically.
+* Manages ports, environment variables and volumes.
+
+---
+
+# Real Workflow
+
+Application Code
+
+↓
+
+Dockerfile
+
+↓
+
+docker build
+
+↓
+
+Docker Image
+
+↓
+
+docker run / docker compose up
+
+↓
+
+Running Containers
+
+---
+
+# Important Commands
+
+```bash
+docker build -t myimage:v1 .
+
+docker run -d -p 8080:80 myimage:v1
+
+docker images
+
+docker ps
+
+docker stop container_name
+
+docker rm container_name
+
+docker login
+
+docker push username/image:v1
+
+docker pull nginx
+
+docker compose up
+
+docker compose down
+```
+
+---
+
+# Interview Questions
+
+**What is Docker Daemon?**
+
+Background service that manages images, containers, networks and volumes.
+
+---
+
+**What is Docker Client?**
+
+Command line tool used to communicate with Docker daemon.
+
+---
+
+**What is Docker Hub?**
+
+Public Docker registry used to store Docker images.
+
+---
+
+**What is Build Context?**
+
+Directory Docker can access while building the image.
+
+---
+
+**Why didn't we write CMD in Nginx?**
+
+Because official Nginx image already contains CMD.
+
+---
+
+**Why are Docker images immutable?**
+
+Images are read-only templates.
+
+To apply changes we build a new image and create a new container.
+
+---
+
+**What is an Image Layer?**
+
+Every Dockerfile instruction creates one layer.
+
+Docker rebuilds only changed layers.
+
+---
+
+# Docker Journey Completed ✅
+
+Linux → Git → GitHub → Docker → Docker Hub → Docker Compose → Real Docker Project
+
+Ready for Kubernetes 🚀
+
