@@ -3,7 +3,8 @@ Docker Day 2 Notes – Dockerfile, FROM, RUN, CMD
 
 A Dockerfile is a plain text file that contains instructions for building a Docker image.
 
-Instead of manually installing software every time a container is created, we write the instructions once in a Dockerfile. Docker automatically builds an image with all the required software already installed.
+Instead of manually installing software every time a container is created, we write the instructions once in a Dockerfile.
+Docker automatically builds an image with all the required software already installed.
 
 2. Why do we need a Dockerfile?
 
